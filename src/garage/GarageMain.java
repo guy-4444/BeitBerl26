@@ -6,7 +6,7 @@ public class GarageMain {
 
         Car c1 = new Car("Mercedes");
         c1.setKm(300000);
-        System.out.println(c1);
+        System.out.println(c1.toString());
 
         Car c2 = new Car("Mitsubishi");
         c2.setKm(50000);
