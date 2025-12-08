@@ -361,7 +361,7 @@ public class MermaidClassDiagramGenerator {
 
     /**
      * Gets the parameter name. If compiled with -parameters flag, returns the real name.
-     * Otherwise, infers a meaningful name from the type.
+     * Otherwise, uses indexed naming (arg0, arg1, etc.).
      */
     private static String getParameterName(Parameter param, int index) {
         // If compiled with -parameters, use the real name
@@ -369,39 +369,8 @@ public class MermaidClassDiagramGenerator {
             return param.getName();
         }
 
-        // Otherwise, infer a name from the type
-        return inferParameterName(param.getType(), index);
-    }
-
-    /**
-     * Infers a meaningful parameter name from its type.
-     */
-    private static String inferParameterName(Class<?> type, int index) {
-        String typeName = type.getSimpleName();
-
-        // Handle primitives and common types
-        switch (typeName) {
-            case "String": return "name";
-            case "int": case "Integer": return "num";
-            case "long": case "Long": return "num";
-            case "double": case "Double": return "value";
-            case "float": case "Float": return "price";
-            case "boolean": case "Boolean": return "flag";
-            case "byte": case "Byte": return "b";
-            case "char": case "Character": return "ch";
-            case "short": case "Short": return "num";
-            case "Object": return "obj";
-            case "List": return "list";
-            case "Map": return "map";
-            case "Set": return "set";
-            default:
-                // Convert type name to camelCase parameter name
-                if (typeName.length() > 0) {
-                    return Character.toLowerCase(typeName.charAt(0)) +
-                            (typeName.length() > 1 ? typeName.substring(1) : "");
-                }
-                return "param" + index;
-        }
+        // Otherwise, use simple indexed naming
+        return "arg" + index;
     }
 
     private static String getVisibilitySymbol(int modifiers) {
