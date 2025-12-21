@@ -19,6 +19,54 @@ public class MermaidClassDiagramGenerator {
     private static final Map<Class<?>, List<String>> classDefinitions = new LinkedHashMap<>();
 
     /**
+     * Configuration options for diagram generation.
+     */
+    public static class Options {
+        private boolean showLegend = false;
+        private boolean includeConstructors = true;
+        private boolean includeParameters = true;
+        private boolean includeGettersSetters = true;
+        private boolean includeFields = true;
+
+        public Options() {}
+
+        public Options showLegend(boolean value) {
+            this.showLegend = value;
+            return this;
+        }
+
+        public Options includeConstructors(boolean value) {
+            this.includeConstructors = value;
+            return this;
+        }
+
+        public Options includeParameters(boolean value) {
+            this.includeParameters = value;
+            return this;
+        }
+
+        public Options includeGettersSetters(boolean value) {
+            this.includeGettersSetters = value;
+            return this;
+        }
+
+        public Options includeFields(boolean value) {
+            this.includeFields = value;
+            return this;
+        }
+
+        // Getters
+        public boolean isShowLegend() { return showLegend; }
+        public boolean isIncludeConstructors() { return includeConstructors; }
+        public boolean isIncludeParameters() { return includeParameters; }
+        public boolean isIncludeGettersSetters() { return includeGettersSetters; }
+        public boolean isIncludeFields() { return includeFields; }
+    }
+
+    // Current options (thread-local for safety)
+    private static Options currentOptions = new Options();
+
+    /**
      * Generates Mermaid class diagram code for the given classes.
      * Automatically copies the result to clipboard.
      *
@@ -26,10 +74,35 @@ public class MermaidClassDiagramGenerator {
      * @return Mermaid markdown string representing the class diagram
      */
     public static String generateForClasses(Class<?>... classes) {
+        return generateForClasses(new Options(), classes);
+    }
+
+    /**
+     * Generates Mermaid class diagram code for the given classes.
+     * Automatically copies the result to clipboard.
+     *
+     * @param showLegend Whether to include a legend box explaining symbols
+     * @param classes The classes to include in the diagram
+     * @return Mermaid markdown string representing the class diagram
+     */
+    public static String generateForClasses(boolean showLegend, Class<?>... classes) {
+        return generateForClasses(new Options().showLegend(showLegend), classes);
+    }
+
+    /**
+     * Generates Mermaid class diagram code for the given classes with custom options.
+     * Automatically copies the result to clipboard.
+     *
+     * @param options Configuration options for the diagram
+     * @param classes The classes to include in the diagram
+     * @return Mermaid markdown string representing the class diagram
+     */
+    public static String generateForClasses(Options options, Class<?>... classes) {
         // Clear previous state
         processedClasses.clear();
         relationships.clear();
         classDefinitions.clear();
+        currentOptions = options;
 
         Set<Class<?>> targetClasses = new HashSet<>(Arrays.asList(classes));
 
@@ -41,6 +114,11 @@ public class MermaidClassDiagramGenerator {
         // Build the Mermaid output
         StringBuilder sb = new StringBuilder();
         sb.append("classDiagram\n");
+
+        // Add legend if requested
+        if (options.isShowLegend()) {
+            sb.append(generateLegend());
+        }
 
         // Sort classes: interfaces first, then abstract classes, then concrete classes
         List<Class<?>> sortedClasses = new ArrayList<>(classDefinitions.keySet());
@@ -69,11 +147,13 @@ public class MermaidClassDiagramGenerator {
                 sb.append("    }\n");
             }
 
-            // Add stereotypes (abstract, interface)
+            // Add stereotypes (abstract, interface, final)
             if (clazz.isInterface()) {
                 sb.append("    <<interface>> ").append(clazz.getSimpleName()).append("\n");
             } else if (Modifier.isAbstract(clazz.getModifiers())) {
                 sb.append("    <<abstract>> ").append(clazz.getSimpleName()).append("\n");
+            } else if (Modifier.isFinal(clazz.getModifiers())) {
+                sb.append("    <<final>> ").append(clazz.getSimpleName()).append("\n");
             }
         }
 
@@ -109,6 +189,27 @@ public class MermaidClassDiagramGenerator {
     }
 
     /**
+     * Generates a legend box explaining the symbols used in the diagram.
+     */
+    private static String generateLegend() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("    class Legend {\n");
+        sb.append("        +public\n");
+        sb.append("        -private\n");
+        sb.append("        #protected\n");
+        sb.append("        ~package\n");
+        sb.append("        $ static\n");
+        sb.append("        * abstract\n");
+        sb.append("        «override»\n");
+        sb.append("        «final»\n");
+        sb.append("        «constructor»\n");
+        sb.append("    }\n");
+        sb.append("    note for Legend \"UML Symbols Legend\"\n");
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
      * Returns order priority: 0 = interface, 1 = abstract class, 2 = concrete class
      */
     private static int getClassTypeOrder(Class<?> clazz) {
@@ -134,11 +235,13 @@ public class MermaidClassDiagramGenerator {
         List<String> otherMethods = new ArrayList<>();
 
         // Get declared fields
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isSynthetic()) {
-                continue;
+        if (currentOptions.isIncludeFields()) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isSynthetic()) {
+                    continue;
+                }
+                fields.add(formatField(field));
             }
-            fields.add(formatField(field));
         }
 
         // Get declared methods
@@ -152,18 +255,22 @@ public class MermaidClassDiagramGenerator {
 
             // Categorize method
             if (isGetterOrSetter(method)) {
-                gettersSetters.add(formatted);
+                if (currentOptions.isIncludeGettersSetters()) {
+                    gettersSetters.add(formatted);
+                }
             } else {
                 otherMethods.add(formatted);
             }
         }
 
         // Get constructors
-        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            if (constructor.isSynthetic()) {
-                continue;
+        if (currentOptions.isIncludeConstructors()) {
+            for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+                if (constructor.isSynthetic()) {
+                    continue;
+                }
+                constructors.add(formatConstructor(constructor, clazz));
             }
-            constructors.add(formatConstructor(constructor, clazz));
         }
 
         // Combine in order: fields, constructors, getters/setters, other methods
@@ -303,6 +410,11 @@ public class MermaidClassDiagramGenerator {
 
         sb.append(field.getName()).append(" : ").append(formatType(field.getType()));
 
+        // Add final marker
+        if (Modifier.isFinal(field.getModifiers())) {
+            sb.append(" «final»");
+        }
+
         return sb.toString();
     }
 
@@ -321,11 +433,13 @@ public class MermaidClassDiagramGenerator {
 
         sb.append(method.getName()).append("(");
 
-        // Parameters with real names
-        Parameter[] params = method.getParameters();
-        for (int i = 0; i < params.length; i++) {
-            if (i > 0) sb.append(", ");
-            sb.append(getParameterName(params[i], i)).append(" : ").append(formatType(params[i].getType()));
+        // Parameters with real names (if enabled)
+        if (currentOptions.isIncludeParameters()) {
+            Parameter[] params = method.getParameters();
+            for (int i = 0; i < params.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(getParameterName(params[i], i)).append(" : ").append(formatType(params[i].getType()));
+            }
         }
         sb.append(")");
 
@@ -333,9 +447,13 @@ public class MermaidClassDiagramGenerator {
             sb.append(" : ").append(formatType(method.getReturnType()));
         }
 
+        // Add modifiers
         String signature = getMethodSignature(method);
         if (overriddenMethods.contains(signature)) {
             sb.append(" «override»");
+        }
+        if (Modifier.isFinal(method.getModifiers())) {
+            sb.append(" «final»");
         }
 
         return sb.toString();
@@ -348,11 +466,13 @@ public class MermaidClassDiagramGenerator {
 
         sb.append("«constructor» ").append(clazz.getSimpleName()).append("(");
 
-        // Parameters with real names
-        Parameter[] params = constructor.getParameters();
-        for (int i = 0; i < params.length; i++) {
-            if (i > 0) sb.append(", ");
-            sb.append(getParameterName(params[i], i)).append(" : ").append(formatType(params[i].getType()));
+        // Parameters with real names (if enabled)
+        if (currentOptions.isIncludeParameters()) {
+            Parameter[] params = constructor.getParameters();
+            for (int i = 0; i < params.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(getParameterName(params[i], i)).append(" : ").append(formatType(params[i].getType()));
+            }
         }
         sb.append(")");
 
@@ -397,131 +517,29 @@ public class MermaidClassDiagramGenerator {
      * Also copies to clipboard.
      */
     public static String generateSimplified(Class<?>... classes) {
-        processedClasses.clear();
-        relationships.clear();
-        classDefinitions.clear();
-
-        Set<Class<?>> targetClasses = new HashSet<>(Arrays.asList(classes));
-
-        for (Class<?> clazz : classes) {
-            processClassSimplified(clazz, targetClasses);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("classDiagram\n");
-
-        // Sort classes: interfaces first, then abstract classes, then concrete classes
-        List<Class<?>> sortedClasses = new ArrayList<>(classDefinitions.keySet());
-        sortedClasses.sort((a, b) -> {
-            int scoreA = getClassTypeOrder(a);
-            int scoreB = getClassTypeOrder(b);
-            if (scoreA != scoreB) {
-                return scoreA - scoreB;
-            }
-            return a.getSimpleName().compareTo(b.getSimpleName());
-        });
-
-        for (Class<?> clazz : sortedClasses) {
-            List<String> members = classDefinitions.get(clazz);
-
-            sb.append("    class ").append(clazz.getSimpleName());
-
-            if (members.isEmpty()) {
-                sb.append("\n");
-            } else {
-                sb.append(" {\n");
-                for (String member : members) {
-                    sb.append("        ").append(member).append("\n");
-                }
-                sb.append("    }\n");
-            }
-
-            if (clazz.isInterface()) {
-                sb.append("    <<interface>> ").append(clazz.getSimpleName()).append("\n");
-            } else if (Modifier.isAbstract(clazz.getModifiers())) {
-                sb.append("    <<abstract>> ").append(clazz.getSimpleName()).append("\n");
-            }
-        }
-
-        sb.append("\n");
-
-        for (String relationship : relationships) {
-            sb.append("    ").append(relationship).append("\n");
-        }
-
-        String result = sb.toString();
-        copyToClipboard(result);
-        return result;
+        return generateForClasses(
+                new Options()
+                        .includeConstructors(false)
+                        .includeParameters(false),
+                classes
+        );
     }
 
-    private static void processClassSimplified(Class<?> clazz, Set<Class<?>> targetClasses) {
-        if (processedClasses.contains(clazz) || clazz == Object.class) {
-            return;
-        }
-        processedClasses.add(clazz);
-
-        List<String> fields = new ArrayList<>();
-        List<String> gettersSetters = new ArrayList<>();
-        List<String> otherMethods = new ArrayList<>();
-
-        Set<String> overriddenMethods = getOverriddenMethods(clazz);
-
-        for (Field field : clazz.getDeclaredFields()) {
-            if (field.isSynthetic()) continue;
-            fields.add(formatField(field));
-        }
-
-        for (Method method : clazz.getDeclaredMethods()) {
-            if (method.isSynthetic() || method.isBridge()) continue;
-            String formatted = formatMethodSimplified(method, overriddenMethods);
-
-            if (isGetterOrSetter(method)) {
-                gettersSetters.add(formatted);
-            } else {
-                otherMethods.add(formatted);
-            }
-        }
-
-        List<String> members = new ArrayList<>();
-        members.addAll(fields);
-        members.addAll(gettersSetters);
-        members.addAll(otherMethods);
-
-        classDefinitions.put(clazz, members);
-
-        Class<?> superclass = clazz.getSuperclass();
-        if (superclass != null && superclass != Object.class && targetClasses.contains(superclass)) {
-            relationships.add(superclass.getSimpleName() + " <|-- " + clazz.getSimpleName());
-        }
-
-        for (Class<?> iface : clazz.getInterfaces()) {
-            if (targetClasses.contains(iface)) {
-                relationships.add(iface.getSimpleName() + " <|.. " + clazz.getSimpleName());
-            }
-        }
-    }
-
-    private static String formatMethodSimplified(Method method, Set<String> overriddenMethods) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(getVisibilitySymbol(method.getModifiers()));
-
-        if (Modifier.isAbstract(method.getModifiers())) {
-            sb.append("* ");
-        }
-
-        sb.append(method.getName()).append("()");
-
-        if (method.getReturnType() != void.class) {
-            sb.append(" ").append(formatType(method.getReturnType()));
-        }
-
-        String signature = getMethodSignature(method);
-        if (overriddenMethods.contains(signature)) {
-            sb.append(" «override»");
-        }
-
-        return sb.toString();
+    /**
+     * Alternative version that generates a simpler diagram without constructors.
+     * Also copies to clipboard.
+     *
+     * @param showLegend Whether to include a legend box explaining symbols
+     * @param classes The classes to include in the diagram
+     */
+    public static String generateSimplified(boolean showLegend, Class<?>... classes) {
+        return generateForClasses(
+                new Options()
+                        .showLegend(showLegend)
+                        .includeConstructors(false)
+                        .includeParameters(false),
+                classes
+        );
     }
 
 }
