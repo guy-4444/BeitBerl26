@@ -1,11 +1,14 @@
+import exceptions.ExceptionGameMain;
+import exceptions.ExceptionMain;
 import interfaces.InterfacesMain;
+import queue.QueueMain;
 
 public class Main {
 
 
     public static void main(String[] args) {
-        InterfacesMain am = new InterfacesMain();
-        am.start();
+        ExceptionGameMain q = new ExceptionGameMain();
+        q.start();
 
     }
 }
