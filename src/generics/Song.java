@@ -1,10 +1,10 @@
 package generics;
 
-public class Song {
+public class Song implements Comparable<Song> {
 
-    private String title;
-    private int min;
-    private GENRE genre;
+    public String title;
+    public int min;
+    public GENRE genre;
 
     public Song(String title, int min, GENRE genre) {
         this.title = title;
@@ -17,5 +17,10 @@ public class Song {
         return title +
                 ", min=" + min +
                 ", genre=" + genre;
+    }
+
+    @Override
+    public int compareTo(Song o) {
+        return this.title.compareTo(o.title);
     }
 }

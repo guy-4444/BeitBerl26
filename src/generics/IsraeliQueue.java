@@ -1,16 +1,18 @@
 package generics;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class IsraeliQueue<S, T> {
 
-    private LinkedHashMap<S, LinkedList<T>> map = new LinkedHashMap<>();
+    private HashMap<S, LinkedList<T>> map = new HashMap<>();
+    private LinkedList<S> keyQueue = new LinkedList<>();
     private int size;
 
     public void add(S key, T item) {
         if (!map.containsKey(key)) {
             map.put(key, new LinkedList<>());
+            keyQueue.add(key);
         }
 
         map.get(key).add(item);
@@ -34,13 +36,14 @@ public class IsraeliQueue<S, T> {
             throw new IsraeliQueueException("No items");
         }
 
-        S key = map.firstEntry().getKey();
+        S key = keyQueue.peek();
         LinkedList<T> queue = map.get(key);
-        T item = peek();
+        T item = remove ? queue.pop() : queue.peek();
 
         if (remove) {
             if (queue.isEmpty()) {
                 map.remove(key);
+                keyQueue.pop();
             }
             size--;
         }
