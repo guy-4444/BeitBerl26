@@ -13,8 +13,6 @@ public class ExceptionGameMain {
 
         int pivot = ThreadLocalRandom.current().nextInt(1, 100 + 1);
 
-        getRandomName();
-
         try {
             getRandomName();
         } catch (GameException e) {
