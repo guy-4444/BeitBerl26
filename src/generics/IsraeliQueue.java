@@ -9,6 +9,10 @@ public class IsraeliQueue<S, T> {
     private LinkedList<S> keyQueue = new LinkedList<>();
     private int size;
 
+    public IsraeliQueue() {
+
+    }
+
     public void add(S key, T item) {
         if (!map.containsKey(key)) {
             map.put(key, new LinkedList<>());

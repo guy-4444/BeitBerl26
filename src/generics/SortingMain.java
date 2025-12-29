@@ -1,7 +1,5 @@
 package generics;
 
-import army.Soldier;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,4 +55,6 @@ public class SortingMain {
             System.out.println(item);
         }
     }
+
+
 }
