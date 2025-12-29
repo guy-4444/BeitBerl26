@@ -3,7 +3,7 @@ package algo;
 public class RiverCross {
 
     public void start() {
-        float map1[][] ={
+        float[][] map1 ={
                 {1, 1, 0, 0, 0, 0},
                 {0, 1, 0, 0, 0, 0},
                 {0, 1, 1, 1, 0, 0},
@@ -11,15 +11,15 @@ public class RiverCross {
                 {0, 0, 0, 1, 1, 1},
                 {0, 0, 0, 0, 0, 0},
         } ;
-        float map2[][] ={
+        float[][] map2 = new float[][]{
                 {1, 1, 0, 0, 0, 0},
                 {0, 1, 0, 0, 0, 0},
                 {0, 1, 1, 1, 0, 0},
                 {0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0},
-        } ;
-        float map3[][] ={
+        };
+        float[][] map3 ={
                 {1, 1, 0, 0, 0, 0},
                 {0, 1, 0, 0, 0, 0},
                 {0, 1, 1, 1, 0, 1},
@@ -41,16 +41,16 @@ public class RiverCross {
     }
 
     private int CanFitBoat(float[][] map, int size) {
-
-
-
+        /*
+         * * complete here
+         */
         return 0;
     }
 
     private int CanYouCrossTheRiver(float[][] map) {
-
-
-
+        /*
+         * * complete here
+         */
         return 0;
     }
 }

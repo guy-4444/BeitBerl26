@@ -1,4 +1,5 @@
-import algo.RiverCross;
+import algo.BeeHives;
+import algo.BeeHivesSol;
 import exceptions.ExceptionGameMain;
 import exceptions.ExceptionMain;
 import generics.GenericsMain;
@@ -11,7 +12,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        RiverCross q = new RiverCross();
+        BeeHives q = new BeeHives();
         q.start();
 
     }
