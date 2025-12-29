@@ -1,5 +1,4 @@
-import algo.BeeHives;
-import algo.BeeHivesSol;
+import algo.*;
 import exceptions.ExceptionGameMain;
 import exceptions.ExceptionMain;
 import generics.GenericsMain;
@@ -12,7 +11,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        BeeHives q = new BeeHives();
+        StockMarketSol q = new StockMarketSol();
         q.start();
 
     }
