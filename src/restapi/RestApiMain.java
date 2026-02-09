@@ -28,7 +28,7 @@ public class RestApiMain {
 
     private void callApi() {
         String apiKey = System.getenv("OPENAI_API_KEY");
-        apiKey = "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";
+        apiKey = "";
         if (apiKey == null) {
             throw new RuntimeException("OPENAI_API_KEY not set");
         }
