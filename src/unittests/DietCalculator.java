@@ -16,6 +16,7 @@ public class DietCalculator {
                 (carb * CALORIES_PER_GRAM_CARB);
     }
 
+
     public double calculateFatPercentage(int totalCalories, int fatGrams) {
         callsCounter++;
 
