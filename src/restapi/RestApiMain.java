@@ -33,6 +33,7 @@ public class RestApiMain {
             throw new RuntimeException("OPENAI_API_KEY not set");
         }
 
+
 //        "content": "Provide all the 15 major cities in Israel. Return ONLY valid JSON. For each city include name, population, district, short_description, area, neighbor cities, array of attractions and key points, local football teams, social-economic status. "
 
         String jsonBody =
